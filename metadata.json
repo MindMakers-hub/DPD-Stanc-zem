@@ -1,0 +1,6 @@
+{
+  "name": "DPD Stancüzem - Gép Park & Gyártáselőkészítő Portal",
+  "description": "A DPD Stancüzem gép- és munkafolyamat adatbázisa, speciális partner-szabályai, gépbeállítási paraméterei és gyártáselőkészítő segédlete.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
