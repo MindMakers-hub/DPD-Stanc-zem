@@ -24,6 +24,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 // server.ts
 var import_express = __toESM(require("express"), 1);
 var import_path = __toESM(require("path"), 1);
+var import_fs = __toESM(require("fs"), 1);
 var import_vite = require("vite");
 var import_genai = require("@google/genai");
 
@@ -1162,10 +1163,503 @@ var WORKFLOWS_DATA = [
   }
 ];
 
+// src/data/inventoryData.ts
+var INITIAL_INVENTORY_DATA = [
+  // --- KÉK ÉPÜLET ---
+  {
+    id: "inv-kek-1",
+    name: "B/1 Grafikai Karton 300g (700\xD71000 mm)",
+    category: "papir",
+    categoryLabel: "Pap\xEDr alapanyag",
+    building: "kek",
+    buildingLabel: "K\xE9k \xC9p\xFClet",
+    quantity: 14500,
+    unit: "\xEDv",
+    minQuantity: 5e3,
+    location: "K\xE9k csarnok - A1 Raklapos szekci\xF3",
+    notes: "Karton szimmetrikus sz\xE1lir\xE1nnyal. Alkalmas Bobst \xE9s Heidelberg stancol\xE1sra.",
+    lastUpdated: "2026-08-01 09:30",
+    updatedBy: "G\xE1bor (GYEK)"
+  },
+  {
+    id: "inv-kek-2",
+    name: "B/1 Duplex Karton 350g (700\xD71000 mm)",
+    category: "papir",
+    categoryLabel: "Pap\xEDr alapanyag",
+    building: "kek",
+    buildingLabel: "K\xE9k \xC9p\xFClet",
+    quantity: 3200,
+    unit: "\xEDv",
+    minQuantity: 4e3,
+    // Low stock!
+    location: "K\xE9k csarnok - A2 Raklapos szekci\xF3",
+    notes: "Primerate megb\xEDz\xE1sokhoz fenntartva.",
+    lastUpdated: "2026-08-02 14:15",
+    updatedBy: "L\xE1szl\xF3 (Rakt\xE1r)"
+  },
+  {
+    id: "inv-kek-3",
+    name: "M\xFCller Martini GR-800 Hot-Melt Forr\xF3 Ragaszt\xF3",
+    category: "ragaszto",
+    categoryLabel: "Ragaszt\xF3",
+    building: "kek",
+    buildingLabel: "K\xE9k \xC9p\xFClet",
+    quantity: 380,
+    unit: "kg",
+    minQuantity: 100,
+    location: "K\xE9k csarnok - Ragaszt\xF3 rakt\xE1r (2. polc)",
+    notes: "Kifejezetten k\xF6nyvk\xF6t\u0151 \xE9s tasakragaszt\xF3 g\xE9phez.",
+    lastUpdated: "2026-08-03 08:00",
+    updatedBy: "J\xF3zsef (M\xFCller g\xE9pkezel\u0151)"
+  },
+  {
+    id: "inv-kek-4",
+    name: "R\xE9z Klis\xE9 Lemez 700\xD71000 mm (1.0 mm vastag)",
+    category: "egyeb",
+    categoryLabel: "Egy\xE9b \xFCzemi anyagok",
+    building: "kek",
+    buildingLabel: "K\xE9k \xC9p\xFClet",
+    quantity: 12,
+    unit: "db",
+    minQuantity: 5,
+    location: "K\xE9k csarnok - Klis\xE9rakt\xE1r p\xE1nc\xE9lszekr\xE9ny",
+    notes: "CNC grav\xEDroz\xE1sra k\xE9sz melegen nyomhat\xF3 r\xE9z alaplemez.",
+    lastUpdated: "2026-07-28 11:20",
+    updatedBy: "G\xE1bor (GYEK)"
+  },
+  {
+    id: "inv-kek-5",
+    name: "Arany Pr\xE9gel\u0151 F\xF3lia (Luxor 220, 120mm \xD7 120m)",
+    category: "preg_folia",
+    categoryLabel: "Pr\xE9g f\xF3lia",
+    building: "kek",
+    buildingLabel: "K\xE9k \xC9p\xFClet",
+    quantity: 38,
+    unit: "tekercs",
+    minQuantity: 15,
+    foilLength: 120,
+    foilWidth: 120,
+    location: "K\xE9k csarnok - F\xF3liat\xE1rol\xF3 szekr\xE9ny",
+    notes: "Magas f\xE9ny\u0171 arany pr\xE9gf\xF3lia Heidelberg t\xE9gelyhez \xE9s Bobst-hoz.",
+    lastUpdated: "2026-08-02 16:45",
+    updatedBy: "L\xE1szl\xF3 (Rakt\xE1r)"
+  },
+  {
+    id: "inv-kek-6",
+    name: "Ez\xFCst Pr\xE9gel\u0151 F\xF3lia (Alufin 362, 100mm \xD7 120m)",
+    category: "preg_folia",
+    categoryLabel: "Pr\xE9g f\xF3lia",
+    building: "kek",
+    buildingLabel: "K\xE9k \xC9p\xFClet",
+    quantity: 8,
+    unit: "tekercs",
+    minQuantity: 10,
+    // Low stock!
+    foilLength: 120,
+    foilWidth: 100,
+    location: "K\xE9k csarnok - F\xF3liat\xE1rol\xF3 szekr\xE9ny",
+    notes: "F\xE9nyes ez\xFCst nemes\xEDt\u0151 f\xF3lia.",
+    lastUpdated: "2026-08-03 07:30",
+    updatedBy: "G\xE1bor (GYEK)"
+  },
+  {
+    id: "inv-kek-7",
+    name: "Stanc V\xE1g\xF3k\xE9s Ac\xE9lszalag (23.8 mm \xD7 0.71 mm)",
+    category: "egyeb",
+    categoryLabel: "Egy\xE9b \xFCzemi anyagok",
+    building: "kek",
+    buildingLabel: "K\xE9k \xC9p\xFClet",
+    quantity: 180,
+    unit: "m",
+    minQuantity: 50,
+    location: "K\xE9k szersz\xE1mm\u0171hely - B1 \xE1llv\xE1ny",
+    notes: "Bohler edzett ac\xE9l v\xE1g\xF3k\xE9s stancszersz\xE1m k\xE9sz\xEDt\xE9shez.",
+    lastUpdated: "2026-07-30 13:00",
+    updatedBy: "P\xE9ter (M\u0171hely)"
+  },
+  {
+    id: "inv-kek-8",
+    name: "B\xEDgel\u0151 Cs\xEDk 0.4 \xD7 1.3 mm (M\u0171anyag profil)",
+    category: "egyeb",
+    categoryLabel: "Egy\xE9b \xFCzemi anyagok",
+    building: "kek",
+    buildingLabel: "K\xE9k \xC9p\xFClet",
+    quantity: 65,
+    unit: "m",
+    minQuantity: 30,
+    location: "K\xE9k szersz\xE1mm\u0171hely - B2 doboz",
+    notes: "Karton b\xEDgel\u0151 ellendarab a pontoss\xE1g\xE9rt.",
+    lastUpdated: "2026-08-01 10:15",
+    updatedBy: "P\xE9ter (M\u0171hely)"
+  },
+  {
+    id: "inv-kek-9",
+    name: "Stretch F\xF3lia Csomagol\xF3 23 micron (K\xE9zi roll)",
+    category: "egyeb",
+    categoryLabel: "Egy\xE9b \xFCzemi anyagok",
+    building: "kek",
+    buildingLabel: "K\xE9k \xC9p\xFClet",
+    quantity: 34,
+    unit: "tekercs",
+    minQuantity: 15,
+    location: "K\xE9k csarnok - Csomagol\xF3\xE1llom\xE1s",
+    notes: "K\xE9sz raklapok r\xF6gz\xEDt\xE9s\xE9hez.",
+    lastUpdated: "2026-08-02 15:00",
+    updatedBy: "L\xE1szl\xF3 (Rakt\xE1r)"
+  },
+  // --- ZÖLD ÉPÜLET ---
+  {
+    id: "inv-zold-1",
+    name: "Diszperzi\xF3s HIDEG RAGASZT\xD3 (Petratto / Mappa g\xE9phez)",
+    category: "ragaszto",
+    categoryLabel: "Ragaszt\xF3",
+    building: "zold",
+    buildingLabel: "Z\xF6ld \xC9p\xFClet",
+    quantity: 6,
+    unit: "V\xF6d\xF6r",
+    minQuantity: 2,
+    location: "Z\xF6ld csarnok - Petratto g\xE9p melletti t\xE1rol\xF3",
+    notes: "V\xEDzb\xE1zis\xFA ragaszt\xF3 f\xFAv\xF3k\xE1s \xE9s t\xE1rcs\xE1s felhord\xE1shoz. Egy v\xF6d\xF6rben 30L van.",
+    lastUpdated: "2026-08-02 11:00",
+    updatedBy: "Tibor (Mappa kezel\u0151)"
+  },
+  {
+    id: "inv-zold-2",
+    name: "Smartfolder Tov\xE1bb\xEDt\xF3 Sz\xEDj 25mm (Z\xF6ld Gum\xEDrozott)",
+    category: "egyeb",
+    categoryLabel: "Egy\xE9b \xFCzemi anyagok",
+    building: "zold",
+    buildingLabel: "Z\xF6ld \xC9p\xFClet",
+    quantity: 18,
+    unit: "m",
+    minQuantity: 20,
+    // Low stock!
+    location: "Z\xF6ld alkatr\xE9sz rakt\xE1r - S1 fi\xF3k",
+    notes: "V\xE9gtelen\xEDthet\u0151 lapossz\xEDj hajt\xE1shoz.",
+    lastUpdated: "2026-08-03 08:30",
+    updatedBy: "Zolt\xE1n (Karbantart\xF3)"
+  },
+  {
+    id: "inv-zold-3",
+    name: "Smartfolder V\xE1kuumsz\xEDj Lyukasztott 40mm",
+    category: "egyeb",
+    categoryLabel: "Egy\xE9b \xFCzemi anyagok",
+    building: "zold",
+    buildingLabel: "Z\xF6ld \xC9p\xFClet",
+    quantity: 12,
+    unit: "m",
+    minQuantity: 5,
+    location: "Z\xF6ld alkatr\xE9sz rakt\xE1r - S2 fi\xF3k",
+    notes: "Adagol\xF3 szekci\xF3 v\xE1kuumsz\xEDja.",
+    lastUpdated: "2026-07-29 15:40",
+    updatedBy: "Zolt\xE1n (Karbantart\xF3)"
+  },
+  {
+    id: "inv-zold-4",
+    name: "B/2 Sz\xFCrkelemez 1.5 mm (500\xD7700 mm)",
+    category: "papir",
+    categoryLabel: "Pap\xEDr alapanyag",
+    building: "zold",
+    buildingLabel: "Z\xF6ld \xC9p\xFClet",
+    quantity: 2800,
+    unit: "\xEDv",
+    minQuantity: 1e3,
+    location: "Z\xF6ld rakt\xE1r - R1 \xE1llv\xE1ny",
+    notes: "K\xF6nyvbor\xEDt\xF3khoz \xE9s kem\xE9nyt\xE1bl\xE1s dobozokhoz.",
+    lastUpdated: "2026-08-01 16:20",
+    updatedBy: "L\xE1szl\xF3 (Rakt\xE1r)"
+  },
+  {
+    id: "inv-zold-5",
+    name: "Gumics\xEDk Stancform\xE1hoz (Kem\xE9ny 10\xD710 mm)",
+    category: "egyeb",
+    categoryLabel: "Egy\xE9b \xFCzemi anyagok",
+    building: "zold",
+    buildingLabel: "Z\xF6ld \xC9p\xFClet",
+    quantity: 45,
+    unit: "m",
+    minQuantity: 20,
+    location: "Z\xF6ld g\xE9pterem - Stanc szersz\xE1mos szekr\xE9ny",
+    notes: "A/3 \xE9s A/2 t\xE9gely stancszersz\xE1mok gumiz\xE1s\xE1hoz.",
+    lastUpdated: "2026-07-31 09:00",
+    updatedBy: "Istv\xE1n (T\xE9gelyes)"
+  },
+  {
+    id: "inv-zold-6",
+    name: "M\u0171anyag P\xE1ntol\xF3 Szalag 12mm \xD7 0.6mm",
+    category: "egyeb",
+    categoryLabel: "Egy\xE9b \xFCzemi anyagok",
+    building: "zold",
+    buildingLabel: "Z\xF6ld \xC9p\xFClet",
+    quantity: 3,
+    unit: "tekercs",
+    minQuantity: 5,
+    // Low stock!
+    location: "Z\xF6ld csomagol\xF3 - P\xE1ntol\xF3 g\xE9p mellett",
+    notes: "Dobozos \xE1ru p\xE1ntol\xE1s\xE1hoz.",
+    lastUpdated: "2026-08-03 09:10",
+    updatedBy: "L\xE1szl\xF3 (Rakt\xE1r)"
+  },
+  {
+    id: "inv-zold-7",
+    name: "K\xE9toldal\xFA Ragaszt\xF3szalag 12mm (\xD6ntapad\xF3 tasakokhoz)",
+    category: "ragaszto",
+    categoryLabel: "Ragaszt\xF3",
+    building: "zold",
+    buildingLabel: "Z\xF6ld \xC9p\xFClet",
+    quantity: 24,
+    unit: "tekercs",
+    minQuantity: 10,
+    location: "Z\xF6ld csarnok - Ragaszt\xF3 polc",
+    notes: "Dosszi\xE9k \xE9s z\xE1r\xF3f\xFClek k\xE9zi/g\xE9pi ragaszt\xE1s\xE1hoz.",
+    lastUpdated: "2026-08-02 12:30",
+    updatedBy: "Tibor (Mappa kezel\u0151)"
+  }
+];
+
+// src/lib/syncService.ts
+async function fetchServerJobs() {
+  try {
+    const res = await fetch("/api/active-jobs");
+    if (res.ok) {
+      const data = await res.json();
+      return data;
+    }
+  } catch (err) {
+    console.warn("[SyncService] Failed to fetch server jobs:", err);
+  }
+  return null;
+}
+
+// src/lib/activeJobsStore.ts
+var STORAGE_KEY = "dpd_gyek_active_jobs_v1";
+var JOBS_CHANGED_EVENT = "dpd_jobs_changed";
+var INITIAL_JOBS = [
+  {
+    id: "job-101",
+    jobName: "Tokaji Asz\xFA Pr\xE9mium D\xEDszdoboz Pr\xE9gel\xE9s",
+    customerName: "Tokaj Bor\xE1szat Kft.",
+    createdAt: "2026-08-01 14:30",
+    status: "szerszamra_var",
+    selectedOp: "preg_f\xE9m",
+    operationLabel: "F\xE9mes Arany Pr\xE9gel\xE9s",
+    materialType: "karton_premium",
+    materialLabel: "Pr\xE9mium M\xE1zolt Karton (350g)",
+    width: 720,
+    height: 520,
+    quantity: 3500,
+    selectedPartner: "standard",
+    partnerName: "Standard DPD Megrendel\u0151",
+    recommendedMachineName: "Grafopress Aranypr\xE9gel\u0151 T\xFCske g\xE9p (B/2)",
+    clisheDetails: {
+      isClisheRequired: true,
+      status: "uj_szukseges",
+      location: "nalunk",
+      orderState: "folyamatban",
+      reasoning: "\xDAj Tokaji log\xF3 klis\xE9 k\xE9sz\xEDt\xE9s alatt a klis\xE9gy\xE1rt\xF3n\xE1l."
+    },
+    notes: "K\xFCl\xF6n\xF6sen figyelni a f\xF3lia h\u0151m\xE9rs\xE9klet\xE9re (115\xB0C). Be\xE9rkez\xE9s v\xE1rhat\xF3: holnap 10:00.",
+    estimatedTimeHours: 3.5
+  },
+  {
+    id: "job-102",
+    jobName: "K\xE1v\xE9s Doboz Stancol\xE1s & Biegel\xE9s",
+    customerName: "Caf\xE9 Budapest Kft.",
+    createdAt: "2026-08-02 09:15",
+    status: "gyartasban",
+    selectedOp: "stanc",
+    operationLabel: "Stancol\xE1s + Biegel\xE9s",
+    materialType: "karton_standard",
+    materialLabel: "Sima Karton (250-350g)",
+    width: 1040,
+    height: 720,
+    quantity: 12e3,
+    selectedPartner: "marzek",
+    partnerName: "Marzek Kft. (Szigor\xFA Kit\xF6r\xE9s!)",
+    recommendedMachineName: "WUPA PS 4.1 Automata Stancg\xE9p (K\xE9k \xC9p\xFClet)",
+    clisheDetails: {
+      isClisheRequired: false,
+      status: "meglevo",
+      location: "nalunk",
+      orderState: "nincs_megrendelve"
+    },
+    notes: "Marzek szab\xE1ly: Automata kit\xF6r\u0151f\xE9s\u0171 berak\xE1sa k\xF6telez\u0151! A kit\xF6r\xF6tt hullad\xE9k k\xFCl\xF6n raklapra.",
+    estimatedTimeHours: 5
+  }
+];
+var inMemoryJobs = null;
+function saveToLocalStorage(jobs) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
+  } catch (err) {
+    console.error("Failed to save active jobs to localStorage:", err);
+  }
+}
+function updateLocalJobsCache(jobs) {
+  inMemoryJobs = jobs;
+  saveToLocalStorage(jobs);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(JOBS_CHANGED_EVENT, { detail: jobs }));
+  }
+}
+if (typeof window !== "undefined") {
+  fetchServerJobs().then((serverJobs) => {
+    if (serverJobs && Array.isArray(serverJobs)) {
+      updateLocalJobsCache(serverJobs);
+    }
+  });
+  window.addEventListener("dpd_sync_jobs", (e) => {
+    const customEvent = e;
+    if (customEvent.detail && Array.isArray(customEvent.detail)) {
+      inMemoryJobs = customEvent.detail;
+      saveToLocalStorage(customEvent.detail);
+      window.dispatchEvent(new CustomEvent(JOBS_CHANGED_EVENT, { detail: customEvent.detail }));
+    }
+  });
+}
+
 // server.ts
 var app = (0, import_express.default)();
 var PORT = 3e3;
-app.use(import_express.default.json());
+app.use(import_express.default.json({ limit: "10mb" }));
+var DATA_DIR = import_path.default.join(process.cwd(), "data_store");
+if (!import_fs.default.existsSync(DATA_DIR)) {
+  import_fs.default.mkdirSync(DATA_DIR, { recursive: true });
+}
+function readStore(filename, defaultValue) {
+  const filePath = import_path.default.join(DATA_DIR, filename);
+  try {
+    if (import_fs.default.existsSync(filePath)) {
+      const content = import_fs.default.readFileSync(filePath, "utf-8");
+      return JSON.parse(content);
+    }
+  } catch (err) {
+    console.error(`[ServerStore] Error reading ${filename}:`, err);
+  }
+  return defaultValue;
+}
+function writeStore(filename, data) {
+  const filePath = import_path.default.join(DATA_DIR, filename);
+  try {
+    import_fs.default.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+  } catch (err) {
+    console.error(`[ServerStore] Error writing ${filename}:`, err);
+  }
+}
+var sseClients = /* @__PURE__ */ new Set();
+function broadcastSyncEvent(type, payload) {
+  const dataString = JSON.stringify({ type, payload, timestamp: Date.now() });
+  const msg = `data: ${dataString}
+
+`;
+  for (const client of sseClients) {
+    try {
+      client.write(msg);
+    } catch (e) {
+    }
+  }
+}
+app.get("/api/events", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+  sseClients.add(res);
+  res.write(`data: ${JSON.stringify({ type: "connected", timestamp: Date.now() })}
+
+`);
+  req.on("close", () => {
+    sseClients.delete(res);
+  });
+});
+app.get("/api/inventory", (req, res) => {
+  const items = readStore("inventory.json", INITIAL_INVENTORY_DATA);
+  res.json(items);
+});
+app.post("/api/inventory", (req, res) => {
+  const items = req.body;
+  if (Array.isArray(items)) {
+    writeStore("inventory.json", items);
+    broadcastSyncEvent("inventory_updated", items);
+    return res.json({ success: true, count: items.length });
+  }
+  res.status(400).json({ error: "\xC9rv\xE9nytelen t\xF6mb adat." });
+});
+app.post("/api/inventory/reset", (req, res) => {
+  writeStore("inventory.json", INITIAL_INVENTORY_DATA);
+  broadcastSyncEvent("inventory_updated", INITIAL_INVENTORY_DATA);
+  res.json({ success: true, items: INITIAL_INVENTORY_DATA });
+});
+app.get("/api/active-jobs", (req, res) => {
+  const jobs = readStore("jobs.json", INITIAL_JOBS);
+  res.json(jobs);
+});
+app.post("/api/active-jobs", (req, res) => {
+  const jobs = req.body;
+  if (Array.isArray(jobs)) {
+    writeStore("jobs.json", jobs);
+    broadcastSyncEvent("jobs_updated", jobs);
+    return res.json({ success: true, count: jobs.length });
+  }
+  res.status(400).json({ error: "\xC9rv\xE9nytelen t\xF6mb adat." });
+});
+app.get("/api/machine-images", (req, res) => {
+  const images = readStore("machine_images.json", {});
+  res.json(images);
+});
+app.post("/api/machine-images", (req, res) => {
+  const { machineId, dataUrl } = req.body;
+  if (!machineId) {
+    return res.status(400).json({ error: "machineId k\xF6telez\u0151." });
+  }
+  const images = readStore("machine_images.json", {});
+  if (dataUrl) {
+    images[machineId] = dataUrl;
+  } else {
+    delete images[machineId];
+  }
+  writeStore("machine_images.json", images);
+  broadcastSyncEvent("machine_images_updated", images);
+  res.json({ success: true, images });
+});
+var DEFAULT_PAGE_SETTINGS = {
+  maintenance_mode: false,
+  buildings: true,
+  jobs: true,
+  inventory: true,
+  partners: true,
+  workflows: true,
+  belts: true,
+  calculator: true,
+  partner_alert: true,
+  ai_assistant: true
+};
+app.get("/api/page-settings", (req, res) => {
+  const settings = readStore("page_settings.json", DEFAULT_PAGE_SETTINGS);
+  res.json(settings);
+});
+app.post("/api/page-settings", (req, res) => {
+  const settings = req.body;
+  if (settings && typeof settings === "object") {
+    writeStore("page_settings.json", settings);
+    broadcastSyncEvent("page_settings_updated", settings);
+    return res.json({ success: true, settings });
+  }
+  res.status(400).json({ error: "\xC9rv\xE9nytelen be\xE1ll\xEDt\xE1s adatok." });
+});
+app.get("/api/partner-rules", (req, res) => {
+  const rules = readStore("partner_rules.json", PARTNER_RULES);
+  res.json(rules);
+});
+app.post("/api/partner-rules", (req, res) => {
+  const rules = req.body;
+  if (Array.isArray(rules)) {
+    writeStore("partner_rules.json", rules);
+    broadcastSyncEvent("partner_rules_updated", rules);
+    return res.json({ success: true, count: rules.length });
+  }
+  res.status(400).json({ error: "\xC9rv\xE9nytelen t\xF6mb adat." });
+});
 var aiClient = null;
 function getGenAI() {
   if (!aiClient) {
@@ -1209,14 +1703,19 @@ async function generateWithFallback(ai, params) {
   }
   throw lastError;
 }
-var SYSTEM_INSTRUCTION = `
-Te a DPD Stanc\xFCzem (2049 Di\xF3sd, Ipar utca 11/A) hivatalos szakmai AI Asszisztense vagy, kifejezetten a Gy\xE1rt\xE1sel\u0151k\xE9sz\xEDt\u0151k (GYEK) \xE9s g\xE9pkezel\u0151k munk\xE1j\xE1t seg\xEDted.
+function getDynamicPartnerRules() {
+  return readStore("partner_rules.json", PARTNER_RULES);
+}
+function getSystemInstruction() {
+  const currentRules = getDynamicPartnerRules();
+  return `
+A neved "Dipid". Te a DPD Stanc\xFCzem (2049 Di\xF3sd, Ipar utca 11/A) hivatalos szakmai AI Asszisztense vagy, kifejezetten a Gy\xE1rt\xE1sel\u0151k\xE9sz\xEDt\u0151k (GYEK) \xE9s g\xE9pkezel\u0151k munk\xE1j\xE1t seg\xEDted.
 
 A DPD Stanc\xFCzem g\xE9pparkja \xE9s technol\xF3giai adatai:
 ${JSON.stringify(MACHINES_DATA, null, 2)}
 
 Partner-specifikus szab\xE1lyok (Kiemelten fontos elsz\xE1mol\xE1skor \xE9s gy\xE1rt\xE1skor!):
-${JSON.stringify(PARTNER_RULES, null, 2)}
+${JSON.stringify(currentRules, null, 2)}
 
 Munkafolyamat \xE9s technol\xF3giai \xFAtmutat\xF3k:
 ${JSON.stringify(WORKFLOWS_DATA, null, 2)}
@@ -1228,6 +1727,7 @@ Szab\xE1lyok az v\xE1laszad\xE1skor:
 4. Ha a felhaszn\xE1l\xF3 g\xE9pv\xE1laszt\xE1si tan\xE1csot k\xE9r (pl. 2mm sz\xFCrkelemezhez vagy hull\xE1mkartonhoz), aj\xE1nld a megfelel\u0151 g\xE9pet (pl. ML-1040 t\xE9gely a 2mm sz\xFCrkelemezhez; SBG 33x77 pap\xEDrhoz; EasyMatrix hull\xE1mkartonhoz 4mm-ig).
 5. Tarts r\xF6vid, l\xE9nyegret\xF6r\u0151, j\xF3l olvashat\xF3 form\xE1tumot pontokba szedve.
 `;
+}
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", company: "DPD Stanc\xFCzem" });
 });
@@ -1243,6 +1743,7 @@ app.post("/api/parse-quote-email", async (req, res) => {
       });
     }
     const ai = getGenAI();
+    const currentPartnerRules = getDynamicPartnerRules();
     const prompt = `
 Elemzed a k\xF6vetkez\u0151 \xE1raj\xE1nlat k\xE9r\xE9st, \xE9s nyerj ki minden m\u0171szaki, megrendel\u0151i \xE9s gy\xE1rt\xE1si param\xE9tert a DPD Stanc\xFCzem g\xE9pparkja, technol\xF3giai sorrendje \xE9s partner szab\xE1lyai alapj\xE1n.
 
@@ -1255,7 +1756,7 @@ G\xE9ppark lelt\xE1r \xE9s specifik\xE1ci\xF3k:
 ${JSON.stringify(MACHINES_DATA, null, 2)}
 
 Partner szab\xE1lyok:
-${JSON.stringify(PARTNER_RULES, null, 2)}
+${JSON.stringify(currentPartnerRules, null, 2)}
 
 M\u0171veleti opci\xF3k azonos\xEDt\xF3i (ezek k\xF6z\xFCl v\xE1lassz a param\xE9terekn\xE9l):
 - M\u0171velet azonos\xEDt\xF3k (opId): 'foliazas_1oldal', 'foliazas_2oldal', 'bigeles', 'vagas_egyenes', 'kasirozas', 'ragasztas_doboz', 'ragasztas_mappa', 'preg_f\xE9m', 'ricceles', 'perforalas', 'lakkozas_spot', 'stanc', 'lakkozas_teljes', 'domboritas'
@@ -1342,7 +1843,7 @@ app.post("/api/chat", async (req, res) => {
     const response = await generateWithFallback(ai, {
       contents: prompt,
       config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
+        systemInstruction: getSystemInstruction(),
         temperature: 0.3
       }
     });
